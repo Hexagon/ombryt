@@ -8,6 +8,13 @@ its section, and puts the section in the release notes.
 
 ## Unreleased
 
+## 0.1.1 (2026-11-27)
+
+- A page field named `site` or `search` (such as `search: false`) no longer hides the template global of that name;
+  it is still on `page`. Before, `search: false` broke the docs theme.
+- Docs theme: the search results close when a result is picked, and stay closed when you come back with the
+  browser's back button.
+
 ## 0.1.0 (2026-11-27)
 
 The first release.

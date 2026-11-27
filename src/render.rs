@@ -142,8 +142,11 @@ impl Object for Ctx {
         if let Some((_, v)) = self.extra.iter().find(|(k, _)| *k == key) {
             return Some(v.clone());
         }
-        if key == "page" {
-            return Some(self.page.clone());
+        match key {
+            "page" => return Some(self.page.clone()),
+            // Globals win over page fields of the same name (`search: false` keeps a page out of the index).
+            "site" | "search" => return None,
+            _ => {}
         }
         self.page.get_attr(key).ok().filter(|v| !v.is_undefined())
     }

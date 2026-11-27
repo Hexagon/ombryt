@@ -65,14 +65,16 @@
     box.hidden = false;
   };
 
+  const close = () => {
+    input.value = "";
+    box.hidden = true;
+    input.blur();
+  };
+
   input.addEventListener("input", run);
   input.addEventListener("focus", load, { once: true });
   input.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      input.value = "";
-      box.hidden = true;
-      input.blur();
-    }
+    if (e.key === "Escape") close();
     if (e.key === "Enter") box.querySelector("a")?.click();
   });
   document.addEventListener("keydown", (e) => {
@@ -80,6 +82,14 @@
       e.preventDefault();
       input.focus();
     }
+  });
+  // Close on a picked result, so the page is not kept with the results open (the back button would show them).
+  box.addEventListener("click", (e) => {
+    if (e.target.closest("a")) close();
+  });
+  // Pages restored from the back/forward cache keep their state; start them closed.
+  window.addEventListener("pageshow", (e) => {
+    if (e.persisted) close();
   });
   document.addEventListener("click", (e) => {
     if (!box.contains(e.target) && e.target !== input) box.hidden = true;
