@@ -8,6 +8,8 @@ its section, and puts the section in the release notes.
 
 ## Unreleased
 
+## 0.1.0 (2026-11-27)
+
 The first release.
 
 - `ombryt build`, `serve` (with live reload), `init`, `new` and `themes`.
@@ -22,5 +24,6 @@ The first release.
 - RSS, Atom and JSON Feed; a sitemap; Open Graph and Twitter meta tags; inlined CSS and JS.
 - A JSON search index for client-side search.
 - A link check of every internal link and fragment, as warnings or (`--strict`) errors.
-- Themes, and a built-in `docs` theme with nested navigation, search and light and dark modes.
+- Themes, and a built-in `docs` theme with nested navigation, search, light and dark modes, and a layout for
+  phones.
 - A GitHub Action (`Hexagon/ombryt@v0`) to install ombryt, and a reusable workflow to publish docs to GitHub Pages.
