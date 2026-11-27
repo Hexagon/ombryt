@@ -37,15 +37,43 @@ Download an archive from the [releases](https://github.com/Hexagon/ombryt/releas
 cargo install ombryt --locked
 ```
 
-In GitHub Actions:
-
-```yaml
-- uses: Hexagon/ombryt@v0
-- run: ombryt build --strict
-```
-
 Release archives are signed with Sigstore and have build provenance attestations;
 [Releases](https://ombryt.56k.guru/reference/releases/) explains how to check them.
+
+## GitHub Actions
+
+The `Hexagon/ombryt` action ([Setup ombryt](https://github.com/marketplace/actions/setup-ombryt) on the GitHub
+Marketplace) installs a release and puts `ombryt` on the `PATH`:
+
+```yaml
+steps:
+  - uses: actions/checkout@v4
+  - uses: Hexagon/ombryt@v0
+  - run: ombryt build --strict
+```
+
+It downloads the archive for the runner from the GitHub release, checks it against the release's `SHA256SUMS`, and
+checks its build provenance with `gh attestation verify`.
+
+| Input | Default | What it does |
+| ----- | ------- | ------------ |
+| `version` | `latest` | the version to install, such as `0.1.1` |
+| `verify-attestation` | `true` | check the build provenance; needs `gh` on the runner |
+| `token` | `github.token` | the token `gh` uses for the provenance check |
+
+| Output | What it is |
+| ------ | ---------- |
+| `version` | the installed version |
+
+It runs on Linux (x64, ARM64), macOS (ARM64, x64) and Windows (x64) runners. GitHub's hosted runners have all it
+needs; a self-hosted runner needs `bash`, `curl`, `tar` (or `unzip` on Windows), `sha256sum` or `shasum`, and `gh`
+unless `verify-attestation` is `false`.
+
+`@v0` follows the newest 0.x release. Before 1.0, a minor release can change behaviour; pin a version
+(`version: 0.1.1`) for builds that must not change.
+
+For documentation sites there is also a reusable workflow that builds and publishes to GitHub Pages; see
+[Docs sites](https://ombryt.56k.guru/guide/docs-sites/).
 
 ## Building from source
 

@@ -130,8 +130,9 @@ jobs:
 
 ## Only installing ombryt
 
-For workflows of your own, the `Hexagon/ombryt` action installs a release, checks it against its checksums and
-its build provenance, and puts it on the `PATH`:
+For workflows of your own, the `Hexagon/ombryt` action
+([Setup ombryt](https://github.com/marketplace/actions/setup-ombryt) on the GitHub Marketplace) installs a release,
+checks it against its checksums and its build provenance, and puts it on the `PATH`:
 
 ```yaml
 steps:
@@ -142,7 +143,18 @@ steps:
   - run: ombryt -C docs build --strict
 ```
 
-It works on Linux, macOS and Windows runners.
+| Input | Default | What it does |
+| ----- | ------- | ------------ |
+| `version` | `latest` | the version to install, such as `0.1.1` |
+| `verify-attestation` | `true` | check the build provenance with `gh attestation verify` |
+| `token` | `github.token` | the token `gh` uses for that check |
+
+The installed version is in the `version` output. It works on Linux (x64, ARM64), macOS (ARM64, x64) and Windows
+(x64) runners. A self-hosted runner needs `bash`, `curl`, `tar` (or `unzip` on Windows), `sha256sum` or `shasum`,
+and `gh` unless `verify-attestation` is `false`.
+
+`@v0` follows the newest 0.x release, and before 1.0 a minor release can change behaviour; set `version` for builds
+that must not change.
 
 ## Coming from Lumocs
 

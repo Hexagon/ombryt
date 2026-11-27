@@ -47,3 +47,33 @@ jobs:
         with:
           toolchain: ${{ steps.msrv.outputs.version }}
       - run: cargo check --locked
+
+  action:
+    # The setup action (action.yml) against published releases: the latest, and a pinned one.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, macos-15-intel, windows-latest]
+        version: [latest, 0.1.0]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      attestations: read
+    steps:
+      - uses: actions/checkout@v4
+      - id: setup
+        uses: ./
+        with:
+          version: ${{ matrix.version }}
+      - name: The installed binary runs and builds a site
+        shell: bash
+        env:
+          WANTED: ${{ matrix.version }}
+          GOT: ${{ steps.setup.outputs.version }}
+        run: |
+          set -euo pipefail
+          test -n "$GOT"
+          if [ "$WANTED" != latest ]; then test "$GOT" = "$WANTED"; fi
+          ombryt --version
+          ombryt init "$RUNNER_TEMP/site"
+          ombryt -C "$RUNNER_TEMP/site" build --strict
