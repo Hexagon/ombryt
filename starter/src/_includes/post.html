@@ -1,0 +1,22 @@
+---
+layout: base.html
+---
+<article>
+  <h1>{{ title }}</h1>
+  <p class="meta">
+    <time datetime="{{ date | date('ISO') }}">{{ date | date('HUMAN_DATE') }}</time>
+    · {{ reading.minutes }} min read
+    {% for tag in tags if tag != "post" %}· <a href="/archive/{{ tag | slugify }}/">#{{ tag }}</a> {% endfor %}
+  </p>
+  {% if toc | length > 1 %}
+  <nav class="toc"><ol>
+    {% for item in toc %}<li><a href="#{{ item.id }}">{{ item.text }}</a></li>{% endfor %}
+  </ol></nav>
+  {% endif %}
+  {{ content }}
+  {% set newer = search.previous(url, "post") %}{% set older = search.next(url, "post") %}
+  <nav class="pager">
+    {% if newer %}<a href="{{ newer.url }}">← {{ newer.title }}</a>{% endif %}
+    {% if older %}<a href="{{ older.url }}">{{ older.title }} →</a>{% endif %}
+  </nav>
+</article>

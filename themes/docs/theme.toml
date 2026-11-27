@@ -1,0 +1,12 @@
+# Defaults of the docs theme. A project's ombryt.toml is merged over these.
+
+[markdown]
+heading_anchors = true
+
+[highlight]
+theme = "OneHalfDark"
+light_theme = "OneHalfLight"
+light_selector = "@media (prefers-color-scheme: light)"
+
+[search]
+index = "/search.json"

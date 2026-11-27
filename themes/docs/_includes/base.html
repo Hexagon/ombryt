@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="{{ lang or site.language }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if url != "/" and title %}{{ title }} · {% endif %}{{ site.title }}</title>
+  <link rel="canonical" href="{{ url | url(true) }}">
+  <link rel="icon" href="{{ favicon or '/favicon.svg' }}">
+  <link rel="stylesheet" href="/theme/docs.css" inline>
+  <link rel="stylesheet" href="/css/highlight.css">
+  <script src="/theme/search.js" defer></script>
+  {% include "head.html" ignore missing %}
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/">{{ site.title }}</a>
+    <input id="search" type="search" placeholder="Search (press /)" aria-label="Search" autocomplete="off">
+    <nav>{% for link in top_links %}<a href="{{ link.url }}">{{ link.title }}</a>{% endfor %}</nav>
+  </header>
+  <div id="results" hidden></div>
+  {{ content }}
+  <footer>{% include "footer.html" ignore missing %}{% if not footer_hide_generator %}<span>Built with <a href="https://ombryt.56k.guru">ombryt</a>.</span>{% endif %}</footer>
+</body>
+</html>

@@ -1,0 +1,40 @@
+[package]
+name = "ombryt"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+description = "A fast, single-binary static site generator for blogs and documentation"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/Hexagon/ombryt"
+readme = "README.md"
+keywords = ["static-site", "ssg", "blog", "markdown", "jinja"]
+categories = ["command-line-utilities", "web-programming"]
+exclude = ["/.github", "/dist", "/docs", "/scripts", "/action.yml", "/AGENTS.md", "/CLAUDE.md"]
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4.6", features = ["derive"] }
+jiff = "1"
+lol_html = "3"
+minijinja = { version = "3", features = ["multi_template", "json", "urlencode", "loop_controls", "speedups", "preserve_order", "serde"] }
+notify = "9"
+notify-debouncer-full = "0.8"
+pulldown-cmark = { version = "0.13", default-features = false, features = ["html", "simd"] }
+rayon = "1.12"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+serde_yaml_ng = "0.10"
+syntect = { version = "5.3", default-features = false, features = ["html", "parsing", "regex-fancy"] }
+tiny_http = "0.12"
+toml = "1"
+two-face = { version = "0.5", default-features = false, features = ["syntect-fancy"] }
+walkdir = "2.5"
+
+[dev-dependencies]
+tempfile = "3"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+strip = true

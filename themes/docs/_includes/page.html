@@ -1,0 +1,72 @@
+---
+layout: base.html
+---
+{#- The navigation: pages without a parent, ordered by nav_order, with up to two levels of children (parent: <title>).
+    The same order gives the previous and next links. -#}
+{%- set ns = namespace(flat=[]) -%}
+{%- set top = search.pages("nav_exclude!=true parent=", "nav_order title") -%}
+{%- for a in top if a.title -%}
+  {%- set ns.flat = ns.flat + [a] -%}
+  {%- for b in search.pages('nav_exclude!=true parent="' ~ a.title ~ '"', "nav_order title") -%}
+    {%- set ns.flat = ns.flat + [b] -%}
+    {%- for c in search.pages('nav_exclude!=true parent="' ~ b.title ~ '"', "nav_order title") -%}
+      {%- set ns.flat = ns.flat + [c] -%}
+    {%- endfor -%}
+  {%- endfor -%}
+{%- endfor -%}
+<div class="doc">
+  <input type="checkbox" id="menu" class="menu-toggle" aria-label="Menu"><label for="menu" class="menu-button">Menu</label>
+  <aside class="side">
+    <ul>
+    {%- for a in top if a.title %}
+      <li><a href="{{ a.url }}"{% if a.url == url %} aria-current="page"{% endif %}>{{ a.nav_title or a.title }}</a>
+        {%- set kids = search.pages('nav_exclude!=true parent="' ~ a.title ~ '"', "nav_order title") %}
+        {%- if kids %}
+        <ul>
+          {%- for b in kids %}
+          <li><a href="{{ b.url }}"{% if b.url == url %} aria-current="page"{% endif %}>{{ b.nav_title or b.title }}</a>
+            {%- set grandkids = search.pages('nav_exclude!=true parent="' ~ b.title ~ '"', "nav_order title") %}
+            {%- if grandkids %}
+            <ul>
+              {%- for c in grandkids %}
+              <li><a href="{{ c.url }}"{% if c.url == url %} aria-current="page"{% endif %}>{{ c.nav_title or c.title }}</a></li>
+              {%- endfor %}
+            </ul>
+            {%- endif %}
+          </li>
+          {%- endfor %}
+        </ul>
+        {%- endif %}
+      </li>
+    {%- endfor %}
+    </ul>
+    {%- if nav_links %}
+    <ul class="nav-links">
+      {%- for link in nav_links %}<li><a href="{{ link.url }}">{{ link.title }}</a></li>{% endfor %}
+    </ul>
+    {%- endif %}
+  </aside>
+  <main>
+    <article>
+      {% if parent %}<p class="crumbs">{% if grand_parent %}{{ grand_parent }} / {% endif %}{{ parent }}</p>{% endif %}
+      {% if not hide_title %}<h1>{{ title }}</h1>{% endif %}
+      {{ content }}
+    </article>
+    <nav class="pager">
+      {%- set ns2 = namespace(prev=none, next=none, seen=false) %}
+      {%- for p in ns.flat %}
+        {%- if ns2.seen and ns2.next is none %}{% set ns2.next = p %}{% endif %}
+        {%- if p.url == url %}{% set ns2.seen = true %}{% endif %}
+        {%- if not ns2.seen %}{% set ns2.prev = p %}{% endif %}
+      {%- endfor %}
+      {%- if ns2.seen and ns2.prev %}<a href="{{ ns2.prev.url }}">← {{ ns2.prev.nav_title or ns2.prev.title }}</a>{% else %}<span></span>{% endif %}
+      {%- if ns2.next %}<a href="{{ ns2.next.url }}">{{ ns2.next.nav_title or ns2.next.title }} →</a>{% endif %}
+    </nav>
+  </main>
+  {%- if toc | length > 1 and not hide_toc %}
+  <nav class="toc" aria-label="On this page">
+    <h4>On this page</h4>
+    <ul>{% for item in toc %}<li><a href="#{{ item.id }}">{{ item.text }}</a></li>{% endfor %}</ul>
+  </nav>
+  {%- endif %}
+</div>

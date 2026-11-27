@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="{{ site.language }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if title and url != "/" %}{{ title }} · {% endif %}{{ site.title }}</title>
+  <link rel="canonical" href="{{ url | url(true) }}">
+  <link rel="alternate" type="application/rss+xml" title="{{ site.title }}" href="/feed.rss">
+  <link rel="stylesheet" href="/css/style.css" inline>
+  <link rel="stylesheet" href="/css/highlight.css">
+</head>
+<body>
+  <header><a href="/">{{ site.title }}</a> <nav><a href="/archive/">archive</a> <a href="/feed.rss">rss</a></nav></header>
+  <main>{{ content }}</main>
+  <footer>Built with <a href="https://github.com/Hexagon/ombryt">ombryt</a>.</footer>
+</body>
+</html>

@@ -1,0 +1,6 @@
+top_links:
+  - title: GitHub
+    url: https://github.com/you/your-project
+nav_links:
+  - title: Changelog
+    url: https://github.com/you/your-project/blob/main/CHANGELOG.md

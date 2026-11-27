@@ -1,0 +1,63 @@
+name: Setup ombryt
+description: Install the ombryt static site generator from a GitHub release, checked against its checksums and build provenance.
+author: Hexagon
+branding:
+  icon: book-open
+  color: orange
+
+inputs:
+  version:
+    description: "The version to install, e.g. 0.1.0, or latest"
+    default: latest
+  verify-attestation:
+    description: "Check the download's build provenance with gh attestation verify"
+    default: "true"
+  token:
+    description: "Token for the GitHub API (attestation check)"
+    default: ${{ github.token }}
+
+outputs:
+  version:
+    description: "The installed version"
+    value: ${{ steps.install.outputs.version }}
+
+runs:
+  using: composite
+  steps:
+    - id: install
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+        VERIFY: ${{ inputs.verify-attestation }}
+        GH_TOKEN: ${{ inputs.token }}
+      run: |
+        set -euo pipefail
+        case "$RUNNER_OS-$RUNNER_ARCH" in
+          Linux-X64) target=x86_64-unknown-linux-musl ext=tar.gz ;;
+          Linux-ARM64) target=aarch64-unknown-linux-musl ext=tar.gz ;;
+          macOS-ARM64) target=aarch64-apple-darwin ext=tar.gz ;;
+          macOS-X64) target=x86_64-apple-darwin ext=tar.gz ;;
+          Windows-X64) target=x86_64-pc-windows-msvc ext=zip ;;
+          *) echo "::error::there is no ombryt build for $RUNNER_OS on $RUNNER_ARCH"; exit 1 ;;
+        esac
+        if [ "$VERSION" = latest ]; then
+          base=https://github.com/Hexagon/ombryt/releases/latest/download
+        else
+          base=https://github.com/Hexagon/ombryt/releases/download/v${VERSION#v}
+        fi
+        file=ombryt-$target.$ext
+        dir=$RUNNER_TEMP/ombryt
+        mkdir -p "$dir"
+        cd "$dir"
+        curl -fsSLO --retry 3 "$base/$file"
+        curl -fsSLO --retry 3 "$base/SHA256SUMS"
+        grep "  $file\$" SHA256SUMS > expected
+        if command -v sha256sum > /dev/null; then sha256sum -c expected; else shasum -a 256 -c expected; fi
+        if [ "$VERIFY" = true ]; then
+          gh attestation verify "$file" --repo Hexagon/ombryt
+        fi
+        if [ "$ext" = zip ]; then unzip -oq "$file"; else tar -xzf "$file"; fi
+        echo "$dir/ombryt-$target" >> "$GITHUB_PATH"
+        version=$("$dir/ombryt-$target/ombryt" --version | awk '{print $2}')
+        echo "version=$version" >> "$GITHUB_OUTPUT"
+        echo "Installed ombryt $version ($target)"

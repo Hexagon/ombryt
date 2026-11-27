@@ -1,0 +1,24 @@
+[site]
+url = "https://example.com"
+title = "My Site"
+description = "Notes on things I build."
+language = "en"
+author = { name = "Me", url = "https://example.com" }
+
+[build]
+src = "src"
+out = "_site"
+
+[highlight]
+theme = "OneHalfDark"
+light_theme = "OneHalfLight"
+light_selector = "@media (prefers-color-scheme: light)"
+
+[[feeds]]
+query = "post"
+limit = 20
+rss = "/feed.rss"
+json = "/feed.json"
+atom = "/feed.atom"
+content = "full"
+exclude_tags = ["post"]

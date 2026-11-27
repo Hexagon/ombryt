@@ -1,0 +1,6 @@
+# Defaults of the docs theme for every page. src/_data.yaml is merged over these.
+layout: page.html
+# Links in the header: [{title, url}]
+top_links: []
+# Links at the end of the navigation: [{title, url}]
+nav_links: []

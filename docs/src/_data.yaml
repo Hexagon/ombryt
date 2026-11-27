@@ -1,0 +1,12 @@
+top_links:
+  - title: Guide
+    url: /guide/
+  - title: Reference
+    url: /reference/
+  - title: GitHub
+    url: https://github.com/Hexagon/ombryt
+nav_links:
+  - title: Changelog
+    url: https://github.com/Hexagon/ombryt/blob/main/CHANGELOG.md
+  - title: crates.io
+    url: https://crates.io/crates/ombryt

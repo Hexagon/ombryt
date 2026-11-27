@@ -1,0 +1,15 @@
+# The ombryt documentation: markdown on the built-in docs theme, built by ombryt itself
+# (see .github/workflows/pages.yml).
+
+[site]
+url = "https://ombryt.56k.guru"
+title = "ombryt"
+description = "A fast, single-binary static site generator written in Rust."
+language = "en"
+author = { name = "Hexagon", url = "https://hexagon.56k.guru" }
+
+[build]
+src = "src"
+out = "_site"
+theme = "docs"
+strict_links = true

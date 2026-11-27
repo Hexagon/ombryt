@@ -1,0 +1,16 @@
+# Copy to .github/workflows/docs.yml in your repository, then enable GitHub Pages with "GitHub Actions" as the
+# source (Settings → Pages). The docs are built from docs/ on every push to main.
+name: docs
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  docs:
+    uses: Hexagon/ombryt/.github/workflows/docs.yml@v0
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    with:
+      path: docs

@@ -1,0 +1,16 @@
+---
+title: Archive
+url: /archive/
+taxonomy:
+  key: tags
+  query: post
+  exclude: [post]
+  url: /archive/{term}/
+---
+<h1>{% if term %}#{{ term }}{% else %}Archive{% endif %}</h1>
+<p>{% for t in terms %}<a href="{{ t.url }}">#{{ t.name }}</a> ({{ t.count }}) {% endfor %}</p>
+<ul>
+{% for post in search.pages(query, "date=desc") %}
+  <li><time>{{ post.date | date }}</time> <a href="{{ post.url }}">{{ post.title }}</a></li>
+{% endfor %}
+</ul>

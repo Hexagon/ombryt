@@ -1,0 +1,215 @@
+name: release
+
+# On a version tag (v0.2.3), which must be the version in Cargo.toml and have a section in CHANGELOG.md:
+# - archives for Linux (static, x86_64 and aarch64), macOS (aarch64 and x86_64) and Windows (x86_64);
+# - SHA256SUMS of them, signed with Sigstore (keyless, by this workflow's identity), and a GitHub build provenance
+#   attestation for every archive;
+# - a GitHub release with this version's CHANGELOG.md section, the checksums and how to verify them;
+# - the crate on crates.io (trusted publishing; the CARGO_REGISTRY_TOKEN secret is used instead if it is set, which
+#   the very first publish needs);
+# - the major version tag (v0, v1, …) moved to this release, for `uses: Hexagon/ombryt@v0` and the reusable docs
+#   workflow.
+#
+# A release made by hand on GitHub (which makes the tag) gets the files and these notes ahead of its own text. Run
+# by hand with a tag (Actions → release → Run workflow), it makes that tag's archives and release again.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "The tag to release, e.g. v0.1.0"
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  TAG: ${{ inputs.tag || github.ref_name }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ env.TAG }}
+      - name: The tag is the version in Cargo.toml
+        run: |
+          v=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n 1)
+          if [ "v$v" != "$TAG" ]; then
+            echo "::error::tag $TAG, but Cargo.toml says $v"
+            exit 1
+          fi
+      - name: CHANGELOG.md has a section for this version
+        run: |
+          if ! grep -q "^## ${TAG#v} " CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no '## ${TAG#v} (<date>)' section"
+            exit 1
+          fi
+
+  build:
+    needs: check
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { target: x86_64-unknown-linux-musl, os: ubuntu-latest }
+          - { target: aarch64-unknown-linux-musl, os: ubuntu-latest }
+          - { target: aarch64-apple-darwin, os: macos-latest }
+          - { target: x86_64-apple-darwin, os: macos-latest }
+          - { target: x86_64-pc-windows-msvc, os: windows-latest }
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ env.TAG }}
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - name: Zig and cargo-zigbuild, for static Linux builds
+        if: contains(matrix.target, 'linux-musl')
+        run: |
+          python3 -m pip install --user --break-system-packages ziglang==0.17.1
+          cargo install cargo-zigbuild --version 0.24.1 --locked
+      - name: GNU tar, for reproducible archives
+        if: runner.os == 'macOS'
+        run: command -v gtar || brew install gnu-tar
+      - run: scripts/release-archive.sh ${{ matrix.target }}
+      - name: The binary runs
+        if: matrix.target != 'aarch64-unknown-linux-musl'
+        run: |
+          exe=target/${{ matrix.target }}/release/ombryt
+          [ -f "$exe" ] || exe="$exe.exe"
+          "$exe" --version
+      - uses: actions/upload-artifact@v4
+        with:
+          name: archive-${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # the release
+      id-token: write # Sigstore signing and attestations
+      attestations: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ env.TAG }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: archive-*
+          path: dist
+          merge-multiple: true
+      - name: Checksums
+        run: |
+          cd dist
+          sha256sum -- *.tar.gz *.zip > SHA256SUMS
+          cat SHA256SUMS
+      - name: Build provenance for every archive
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            dist/*.tar.gz
+            dist/*.zip
+      - uses: sigstore/cosign-installer@v3
+      - name: Sign the checksums
+        run: cosign sign-blob --yes --bundle dist/SHA256SUMS.sigstore.json dist/SHA256SUMS
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          {
+            awk -v v="## ${TAG#v} " 'index($0, v) == 1 { on = 1; next } /^## / { on = 0 } on' CHANGELOG.md
+            echo
+            echo "## Install"
+            echo
+            echo '```sh'
+            echo "cargo install ombryt --locked --version ${TAG#v}"
+            echo '```'
+            echo
+            echo "Or download the archive for your system below. In GitHub Actions: \`uses: $REPO@${TAG%%.*}\`."
+            echo
+            echo "## Checksums (SHA-256)"
+            echo
+            echo '```'
+            cat dist/SHA256SUMS
+            echo '```'
+            echo
+            echo "Every archive has a build provenance attestation, and \`SHA256SUMS\` is signed with Sigstore by this"
+            echo "release workflow. To check a download:"
+            echo
+            echo '```sh'
+            echo "gh attestation verify ombryt-x86_64-unknown-linux-musl.tar.gz --repo $REPO"
+            echo "# or"
+            echo "cosign verify-blob SHA256SUMS --bundle SHA256SUMS.sigstore.json \\"
+            echo "  --certificate-identity-regexp '^https://github.com/$REPO/\\.github/workflows/release\\.yml@refs/tags/v' \\"
+            echo "  --certificate-oidc-issuer https://token.actions.githubusercontent.com"
+            echo "sha256sum -c SHA256SUMS --ignore-missing"
+            echo '```'
+          } > notes.md
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            # Made by hand: keep its text after ours (unless it is ours from an earlier run), replace the files.
+            gh release view "$TAG" --json body --jq .body > earlier.md
+            if [ -s earlier.md ] && ! grep -q '^## Checksums (SHA-256)' earlier.md; then
+              { echo; cat earlier.md; } >> notes.md
+            fi
+            gh release upload "$TAG" dist/* --clobber
+            gh release edit "$TAG" --notes-file notes.md
+          else
+            gh release create "$TAG" dist/* --verify-tag --title "ombryt ${TAG#v}" --notes-file notes.md
+          fi
+
+  crates-io:
+    needs: release
+    runs-on: ubuntu-latest
+    environment: crates-io
+    permissions:
+      contents: read
+      id-token: write # trusted publishing
+    env:
+      TOKEN_SECRET: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ env.TAG }}
+      - name: Already on crates.io?
+        id: published
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' -A "ombryt-release (github.com/Hexagon/ombryt)" \
+            "https://crates.io/api/v1/crates/ombryt/${TAG#v}")
+          echo "done=$([ "$code" = 200 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.published.outputs.done != 'true'
+      - name: Token from trusted publishing
+        id: auth
+        if: steps.published.outputs.done != 'true' && env.TOKEN_SECRET == ''
+        uses: rust-lang/crates-io-auth-action@v1
+      - name: Publish
+        if: steps.published.outputs.done != 'true'
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token || env.TOKEN_SECRET }}
+        run: cargo publish --locked
+
+  major-tag:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ env.TAG }}
+      - name: Move the major version tag here
+        run: |
+          major=${TAG%%.*}
+          case "$TAG" in *-*) echo "pre-release, $major stays"; exit 0 ;; esac
+          git tag -f "$major" "$TAG^{commit}"
+          git push -f origin "refs/tags/$major"

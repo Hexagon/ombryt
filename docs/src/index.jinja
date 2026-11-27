@@ -1,0 +1,39 @@
+---
+title: ombryt
+layout: base.html
+nav_exclude: true
+description: ombryt is a fast, single-binary static site generator written in Rust, for blogs and documentation.
+---
+<section class="hero">
+  <h1>Markdown in, a fast site out.</h1>
+  <p class="lead">ombryt is a static site generator in one small binary. Markdown, Jinja templates, feeds, a sitemap,
+  search, syntax highlighting and a live-reloading dev server, with nothing else to install.</p>
+  <p><a href="/guide/getting-started/">Get started →</a></p>
+</section>
+<section class="home">
+<pre><code>$ ombryt init my-site && cd my-site
+$ ombryt serve
+built 5 pages and 1 files in 18 ms
+serving ./_site at http://127.0.0.1:8000/</code></pre>
+<div class="features">
+  <div><strong>One binary</strong>Linux, macOS and Windows. No runtime, no node_modules, no plugins to keep up to date.</div>
+  <div><strong>Fast</strong>Pages are rendered in parallel. A 150-page blog builds in well under a second.</div>
+  <div><strong>Jinja templates</strong>MiniJinja, with layouts that wrap layouts, includes, macros and a page <code>search</code> API.</div>
+  <div><strong>Data cascade</strong><code>_data.yaml</code> per directory, merged with each page's front matter.</div>
+  <div><strong>Highlighting at build time</strong>Over 200 languages and 30 themes, as CSS classes, light and dark.</div>
+  <div><strong>Feeds and SEO</strong>RSS, Atom and JSON Feed, a sitemap, and Open Graph and Twitter tags.</div>
+  <div><strong>Search</strong>A JSON index for client-side search. These docs use it: press <kbd>/</kbd>.</div>
+  <div><strong>Link check</strong>Every internal link and <code>#fragment</code> is checked on every build.</div>
+</div>
+<p>The name is Swedish: <em>ombrytning</em> is the step in printing where text is laid out into pages. That is what
+ombryt does with your markdown.</p>
+<p>Writing documentation? <a href="/guide/docs-sites/">The docs theme</a> makes a site like this one from
+a folder of markdown, and a reusable GitHub workflow publishes it.</p>
+<h2>Documentation</h2>
+<ul>
+{% for p in search.pages("parent=Guide", "nav_order") %}<li><a href="{{ p.url }}">{{ p.title }}</a>: {{ p.description }}</li>
+{% endfor %}
+{% for p in search.pages("parent=Reference", "nav_order") %}<li><a href="{{ p.url }}">{{ p.title }}</a>: {{ p.description }}</li>
+{% endfor %}
+</ul>
+</section>
