@@ -51,6 +51,24 @@ h2:hover .anchor, h3:hover .anchor { color: var(--muted); }
 .features strong { display: block; }
 footer span { margin-left: 0.4rem; }
 footer { text-align: center; color: var(--muted); font-size: 0.88em; padding: 2rem 1rem; border-top: 1px solid var(--line); }
+main, article { min-width: 0; }
+pre, table { max-width: 100%; }
 @media (max-width: 1100px) { .doc { grid-template-columns: 13rem minmax(0, 1fr); } .toc { display: none; } }
-@media (max-width: 760px) { .doc { grid-template-columns: 1fr; } .side { position: static; display: none; }
-  .menu-button { display: block; cursor: pointer; color: var(--muted); } .menu-toggle:checked ~ .side { display: block; } .top { flex-wrap: wrap; } .top nav { margin-left: 0; } #search { flex-basis: 100%; } }
+@media (max-width: 760px) {
+  body { font-size: 15.5px; }
+  .doc { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 0.75rem 1rem 1.5rem; }
+  .top { flex-wrap: wrap; gap: 0.5rem 1rem; padding: 0.6rem 1rem; position: static; }
+  .top nav { margin-left: auto; gap: 0.9rem; }
+  #search { order: 3; flex: 1 1 100%; }
+  #results { top: 6.5rem; position: absolute; }
+  .menu-button { display: inline-flex; align-items: center; gap: 0.4rem; justify-self: start; cursor: pointer;
+    color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 0.3rem 0.7rem; font-size: 0.9em; }
+  .menu-button::before { content: "☰"; }
+  .side { position: static; display: none; margin: 0.6rem 0 0.4rem; padding: 0.2rem 0.8rem 0.6rem;
+    border: 1px solid var(--line); border-radius: 8px; }
+  .menu-toggle:checked ~ .side { display: block; }
+  article h1 { font-size: 1.7rem; margin-top: 1.2rem; }
+  article h2 { margin-top: 1.8rem; }
+  pre { margin-left: -1rem; margin-right: -1rem; border-radius: 0; max-width: none; }
+  .hero { margin-top: 1.5rem; } .hero h1 { font-size: 2rem; }
+}
