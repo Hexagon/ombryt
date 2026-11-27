@@ -34,7 +34,8 @@ The body, in markdown.
 ```
 
 Every field is available to templates, both by name (`{{ title }}`) and on `page` (`{{ page.title }}`). Some fields
-mean something to ombryt; [Page data](/reference/page-data/) lists them.
+mean something to ombryt; [Page data](/reference/page-data/) lists them. A field named `site` or `search` is only
+on `page`: by name, those are always the template globals.
 
 ## The data cascade
 

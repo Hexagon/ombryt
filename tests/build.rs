@@ -88,3 +88,16 @@ fn docs_theme_starter_builds_cleanly() {
     ombryt(dir, &["build"]);
     assert_eq!(read(dir, "theme/search.js"), "// mine");
 }
+
+#[test]
+fn page_fields_do_not_hide_globals() {
+    // `search: false` used to replace the `search` object in that page's templates (issue #3).
+    let tmp = tempfile::tempdir().unwrap();
+    let dir = tmp.path();
+    ombryt(dir, &["init", "--theme", "docs"]);
+    let page = "---\ntitle: Page not found\nurl: /404.html\nnav_exclude: true\nsearch: false\n---\n\nNot here.\n";
+    std::fs::write(dir.join("src/404.md"), page).unwrap();
+    ombryt(dir, &["build", "--strict"]);
+    assert!(read(dir, "404.html").contains("Not here."));
+    assert!(!read(dir, "search.json").contains("/404.html"), "the page is left out of the index");
+}
